@@ -45,9 +45,10 @@
     <h2>今日の食事</h2>
     <p>写真とナユタの判定結果を保存します。</p>
 
-    <button onclick="alert('準備OK🔥')">
-      ＋ 食事を記録
-    </button>
+<input type="file" id="foodPhoto" accept="image/*" style="display:none;">
+<button onclick="document.getElementById('foodPhoto').click()">
+  📷 写真を選ぶ
+</button>
   </div>
 
 </body>
