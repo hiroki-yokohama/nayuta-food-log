@@ -131,6 +131,7 @@
         </div>
 
       </div>
+      <button id="analyzeButton">🔍 ナユタに判定してもらう</button>
 
     </div>
 
@@ -158,6 +159,16 @@
 
       reader.readAsDataURL(file);
     });
+    const analyzeButton = document.getElementById("analyzeButton");
+
+analyzeButton.addEventListener("click", function () {
+  if (!foodPhoto.files[0]) {
+    alert("先に食事写真を選んでね！");
+    return;
+  }
+
+  alert("🔥 ナユタ判定機能、ここから接続！");
+});
   </script>
 
 </body>
