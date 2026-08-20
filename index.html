@@ -186,7 +186,12 @@ analyzeButton.addEventListener("click", function () {
     return;
   }
 
-  alert("🔥 ナユタ判定機能、ここから接続！");
+document.getElementById("resultArea").style.display = "block";
+document.getElementById("foodResult").textContent = "テスト：鶏肉・卵・ご飯";
+document.getElementById("proteinCenter").textContent = "35";
+document.getElementById("proteinMin").textContent = "30";
+document.getElementById("proteinMax").textContent = "40";
+document.getElementById("proteinSafe").textContent = "30";
 });
   </script>
 
