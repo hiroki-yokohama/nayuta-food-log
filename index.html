@@ -6,9 +6,7 @@
   <title>NAYUTA Food Log</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -52,23 +50,35 @@
       line-height: 1.6;
     }
 
-    #foodPhoto {
-      display: none;
-    }
+    #foodPhoto { display: none; }
 
-    .photoButton {
+    .photoButton,
+    #analyzeButton {
       display: block;
       width: 100%;
       padding: 20px;
       margin-top: 22px;
       border: 0;
       border-radius: 14px;
-      background: #f2f2f7;
-      color: #0a84ff;
       font-size: 20px;
       font-weight: bold;
       text-align: center;
       cursor: pointer;
+    }
+
+    .photoButton {
+      background: #f2f2f7;
+      color: #0a84ff;
+    }
+
+    #analyzeButton {
+      background: #0a84ff;
+      color: white;
+    }
+
+    #analyzeButton:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
 
     #previewArea {
@@ -91,109 +101,155 @@
       color: #30d158;
       font-weight: bold;
     }
+
+    #resultArea {
+      display: none;
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 14px;
+      background: #2c2c2e;
+    }
+
+    #foodResult {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    #errorArea {
+      display: none;
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #3a1d1d;
+      color: #ffb4b4;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 
 <body>
-
   <div class="container">
-
     <h1>🍽️ NAYUTA Food Log</h1>
     <p class="subtitle">食事写真から栄養を記録</p>
 
     <div class="card">
-
       <h2>今日の食事</h2>
 
       <p class="description">
-        写真とナユタの判定結果を保存します。
+        写真を選ぶと、ナユタが画像だけから食事内容とP/F/C・カロリーを推定します。
       </p>
 
-      <input
-        type="file"
-        id="foodPhoto"
-        accept="image/*"
-      >
+      <input type="file" id="foodPhoto" accept="image/*">
 
       <label for="foodPhoto" class="photoButton">
         📷 写真を選ぶ
       </label>
 
       <div id="previewArea">
-
-        <img
-          id="preview"
-          alt="選択した食事写真"
-        >
-
-        <div id="photoStatus">
-          ✅ 写真を選択しました
-        </div>
-
+        <img id="preview" alt="選択した食事写真">
+        <div id="photoStatus">✅ 写真を選択しました</div>
       </div>
+
       <button id="analyzeButton">🔍 ナユタに判定してもらう</button>
-      <div id="resultArea" style="display:none;">
-  <h3>🤖 ナユタ判定</h3>
 
-  <p><strong>料理・食材</strong></p>
-  <div id="foodResult">---</div>
+      <div id="errorArea"></div>
 
-  <p><strong>中央推定値</strong></p>
-  <div><span id="proteinCenter">--</span> g</div>
-
-  <p><strong>信頼範囲</strong></p>
-  <div>
-    <span id="proteinMin">--</span>
-    〜
-    <span id="proteinMax">--</span> g
-  </div>
-
-  <p><strong>安全側計上値</strong></p>
-  <div><span id="proteinSafe">--</span> g</div>
-</div>
-
+      <div id="resultArea">
+        <h3>🤖 ナユタ判定</h3>
+        <div id="foodResult">---</div>
+      </div>
     </div>
-
   </div>
 
   <script>
+    const API_URL = "https://nayuta-food-api.yokohamakikaku.workers.dev/";
+
     const foodPhoto = document.getElementById("foodPhoto");
     const preview = document.getElementById("preview");
     const previewArea = document.getElementById("previewArea");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const resultArea = document.getElementById("resultArea");
+    const foodResult = document.getElementById("foodResult");
+    const errorArea = document.getElementById("errorArea");
+
+    let imageDataUrl = "";
 
     foodPhoto.addEventListener("change", function () {
-
       const file = this.files[0];
 
+      resultArea.style.display = "none";
+      errorArea.style.display = "none";
+      imageDataUrl = "";
+
       if (!file) {
+        previewArea.style.display = "none";
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("画像ファイルを選んでね！");
+        this.value = "";
+        previewArea.style.display = "none";
         return;
       }
 
       const reader = new FileReader();
 
       reader.onload = function (event) {
-        preview.src = event.target.result;
+        imageDataUrl = event.target.result;
+        preview.src = imageDataUrl;
         previewArea.style.display = "block";
+      };
+
+      reader.onerror = function () {
+        errorArea.textContent = "画像の読み込みに失敗しました。";
+        errorArea.style.display = "block";
       };
 
       reader.readAsDataURL(file);
     });
-    const analyzeButton = document.getElementById("analyzeButton");
 
-analyzeButton.addEventListener("click", function () {
-  if (!foodPhoto.files[0]) {
-    alert("先に食事写真を選んでね！");
-    return;
-  }
+    analyzeButton.addEventListener("click", async function () {
+      if (!imageDataUrl) {
+        alert("先に食事写真を選んでね！");
+        return;
+      }
 
-document.getElementById("resultArea").style.display = "block";
-document.getElementById("foodResult").textContent = "テスト：鶏肉・卵・ご飯";
-document.getElementById("proteinCenter").textContent = "35";
-document.getElementById("proteinMin").textContent = "30";
-document.getElementById("proteinMax").textContent = "40";
-document.getElementById("proteinSafe").textContent = "30";
-});
+      analyzeButton.disabled = true;
+      analyzeButton.textContent = "⏳ ナユタ判定中…";
+      resultArea.style.display = "block";
+      foodResult.textContent = "画像を分析しています…";
+      errorArea.style.display = "none";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            image: imageDataUrl,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const detail = data?.detail ? `\n${JSON.stringify(data.detail, null, 2)}` : "";
+          throw new Error((data?.error || `HTTP ${response.status}`) + detail);
+        }
+
+        foodResult.textContent = data.result || "結果を取得できませんでした";
+      } catch (error) {
+        resultArea.style.display = "none";
+        errorArea.textContent = `判定に失敗しました。\n${error.message}`;
+        errorArea.style.display = "block";
+      } finally {
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = "🔍 ナユタに判定してもらう";
+      }
+    });
   </script>
-
 </body>
 </html>
